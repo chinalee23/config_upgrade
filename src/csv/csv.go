@@ -27,9 +27,10 @@ type stCsvHead struct {
 }
 
 type stCsv struct {
-	head stCsvHead
-	rows map[string]string
-	cols [][]string
+	head  stCsvHead
+	rows  map[string]string
+	cols  [][]string
+	lines []string
 }
 
 func parseCsv(path string) (rtn *stCsv) {

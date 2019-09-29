@@ -41,7 +41,7 @@ type STOneRule struct {
 func ParseRule(s string) (rule *STOneRule) {
 	rule = &STOneRule{
 		Rule: "_none_",
-		Data: s,
+		Data: "",
 	}
 
 	if s[:1] != "[" {

@@ -21,6 +21,7 @@ func add_row(upg *common.STOneUpgrade) {
 	case "key":
 		add_row_key(ruleContent.Data, upg)
 	case "raw":
+		add_row_raw(ruleContent.Data, upg)
 	}
 }
 
@@ -73,5 +74,14 @@ func add_row_key(key string, upg *common.STOneUpgrade) {
 		fmt.Println("add_row_key, add key [", key, "] success, in the end", dstfile)
 	} else {
 
+	}
+}
+
+func add_row_raw(data string, upg *common.STOneUpgrade) {
+	dstfile := filepath.Join(env.CurrRegionRoot, "CSV/"+upg.Item+".csv")
+	dstcsv := parseCsv(dstfile)
+	if _, ok := dstcsv.rows[key]; ok {
+		fmt.Println("key [", key, "already exist", dstfile)
+		return
 	}
 }
