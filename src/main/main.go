@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	env.CurrRegionRoot = "E:/svn/Papa2/branch/Resources/External/SM"
+	env.RegionRoot = "E:/svn/Papa2/branch/Resources/External"
+	env.CurrRegion = "SM"
 
 	rules := loadUpgrade("tmp.xlsx", "")
 	if rules == nil {

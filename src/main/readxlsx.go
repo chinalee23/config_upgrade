@@ -39,7 +39,7 @@ func getCell(row *xlsx.Row, idx int, default_value string) string {
 		return default_value
 	} else {
 		cell := row.Cells[idx].String()
-		cell = strings.Trim(cell, " ")
+		cell = strings.TrimSpace(cell)
 		if cell == "" {
 			return default_value
 		} else {
@@ -55,18 +55,18 @@ func parseRules(sheet *xlsx.Sheet) (upgs []*common.STOneUpgrade) {
 		return
 	}
 
-	var target, changeway, item, content, rule string
+	var target, changeway, item, data, datarule string
 	for _, row := range sheet.Rows[1:] {
 		target = getCell(row, 1, target)
 		changeway = getCell(row, 2, changeway)
 		item = getCell(row, 3, item)
-		content = getCell(row, 4, content)
-		rule = getCell(row, 5, rule)
+		data = getCell(row, 4, data)
+		datarule = getCell(row, 5, datarule)
 
 		onerule := &common.STOneUpgrade{
-			Item:    item,
-			Content: content,
-			Rule:    rule,
+			Item:     item,
+			Data:     data,
+			DataRule: datarule,
 		}
 		ntarget, err := strconv.Atoi(target[:1])
 		if err != nil {

@@ -4,32 +4,72 @@ import (
 	"common"
 	"env"
 	"fmt"
-	"path/filepath"
 )
 
+type stAddCsv struct {
+	upg      *common.STOneUpgrade
+	fpath    string
+	patterns map[string]string
+
+	copyregion string
+
+	rules []*common.STRule
+
+	csv *stCsv
+}
+
 func add_csv(upg *common.STOneUpgrade) {
-	dstfile := filepath.Join(env.CurrRegionRoot, "CSV/"+upg.Item+".csv")
+	p := &stAddCsv{
+		upg:        upg,
+		fpath:      "",
+		copyregion: "",
+	}
+
+	p.execute()
+}
+
+func (p *stAddCsv) execute() {
+	p.fpath = getCsvPath(env.CurrRegion, p.upg.Item)
 
 	// 文件已存在就不再拷贝了
-	if common.IsPathExist(dstfile) {
-		fmt.Println("add csv", "file already exist:", upg.Item)
+	if common.IsPathExist(p.fpath) {
+		fmt.Println("add csv", "file already exist:", p.upg.Item)
 		return
 	}
 
 	// 只支持从其他大区直接拷贝
-	rule := common.ParseRule(upg.Rule)
-	if rule.Rule != "copy" {
-		fmt.Println("add csv", "rule not [copy]")
+	p.patterns = common.ParsePattern(p.upg.Data)
+	copyregion, ok := p.patterns["copy"]
+	if !ok {
+		fmt.Println("add csv [", p.upg.Item, "], pattern not [copy]")
 		return
 	}
 
-	rootdir := filepath.Dir(env.CurrRegionRoot)
-	srcfile := filepath.Join(rootdir, filepath.Join(rule.Data, "CSV/"+upg.Item+".csv"))
-
-	err := common.CopyFile(srcfile, dstfile)
-	if err != nil {
-		fmt.Println("copy file", upg.Item, "from region", rule.Data, "fail")
-	} else {
-		fmt.Println("add csv", upg.Item, "success, from region", rule.Data)
+	srcfile := getCsvPath(copyregion, p.upg.Item)
+	if !common.IsPathExist(srcfile) {
+		fmt.Println("add csv [", p.upg.Item, "] not exist in copy region [", copyregion, "]")
+		return
 	}
+
+	common.CopyFile(srcfile, p.fpath)
+
+	p.handleDataRule()
+}
+
+func (p *stAddCsv) handleDataRule() {
+	p.rules = common.ParseRule(p.upg.DataRule)
+	for _, rule := range p.rules {
+		if rule.R == "clear" {
+			p.clear()
+		}
+	}
+}
+
+func (p *stAddCsv) clear() {
+	fmt.Println("clear", p.upg.Item)
+
+	p.csv = parseCsv(p.fpath)
+	lines := p.csv.lines[:3]
+
+	writeLines(lines, p.fpath)
 }

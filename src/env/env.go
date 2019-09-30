@@ -1,3 +1,4 @@
 package env
 
-var CurrRegionRoot string
+var CurrRegion string
+var RegionRoot string

@@ -3,9 +3,11 @@ package csv
 import (
 	"bufio"
 	"common"
+	"env"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -46,6 +48,8 @@ func parseCsv(path string) (rtn *stCsv) {
 
 		rows: make(map[string]string),
 		cols: make([][]string, 0),
+
+		lines: lines,
 	}
 
 	for _, v := range lines[3:] {
@@ -117,4 +121,20 @@ func parseHead(lines []string) (head stCsvHead) {
 	}
 
 	return
+}
+
+func getkey(line string) string {
+	return strings.Split(line, ",")[0]
+}
+
+func getCsvPath(region string, name string) string {
+	return filepath.Join(env.RegionRoot, filepath.Join(region, "CSV/"+name+".csv"))
+}
+
+func writeLines(lines []string, fpath string) {
+	file, _ := os.OpenFile(fpath, os.O_WRONLY|os.O_TRUNC, 0600)
+	defer file.Close()
+
+	filecontent := strings.Join(lines, "\n")
+	file.WriteString(filecontent)
 }

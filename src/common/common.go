@@ -29,32 +29,68 @@ type STOneUpgrade struct {
 	Target    E_Target
 	Changeway E_Change
 	Item      string
-	Content   string
-	Rule      string
+	Data      string
+	DataRule  string
 }
 
-type STOneRule struct {
-	Rule string
-	Data string
+type STRule struct {
+	R     string
+	Param string
 }
 
-func ParseRule(s string) (rule *STOneRule) {
-	rule = &STOneRule{
-		Rule: "_none_",
-		Data: "",
-	}
+func ParsePattern(s string) (patterns map[string]string) {
+	patterns = make(map[string]string)
 
-	if s[:1] != "[" {
+	s = strings.TrimSpace(s)
+	if s == "" {
 		return
 	}
 
-	idx := strings.Index(s, "]")
-	if idx < 0 {
+	sps := strings.Split(s, "\n")
+	for _, v := range sps {
+		v = strings.TrimSpace(v)
+		if v[:1] != "[" {
+			continue
+		}
+
+		idx := strings.Index(v, "]")
+		if idx < 0 {
+			continue
+		}
+
+		key := strings.TrimSpace(v[1:idx])
+		value := strings.TrimSpace(v[idx+1:])
+		patterns[key] = value
+	}
+
+	return
+}
+
+func ParseRule(s string) (rules []*STRule) {
+	rules = make([]*STRule, 0)
+
+	s = strings.TrimSpace(s)
+	if s == "" {
 		return
 	}
 
-	rule.Rule = strings.Trim(s[1:idx], " ")
-	rule.Data = strings.Trim(s[idx+1:], " ")
+	sps := strings.Split(s, "\n")
+	for _, v := range sps {
+		v = strings.TrimSpace(v)
+		if v[:1] != "[" {
+			continue
+		}
+
+		idx := strings.Index(v, "]")
+		if idx < 0 {
+			continue
+		}
+
+		rules = append(rules, &STRule{
+			R:     strings.TrimSpace(v[1:idx]),
+			Param: strings.TrimSpace(v[idx+1:]),
+		})
+	}
 
 	return
 }
