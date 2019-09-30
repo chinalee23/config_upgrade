@@ -95,7 +95,6 @@ func (p *stAddRow) insert() {
 	}
 
 	idx := len(p.csv.lines)
-	fmt.Println("idx", idx)
 	if p.sortorder != "" {
 		for i, v := range p.csv.lines[3:] {
 			k := getkey(v)
@@ -107,18 +106,7 @@ func (p *stAddRow) insert() {
 		}
 	}
 
-	fmt.Println("idx", idx)
-
-	rear := append([]string{}, p.csv.lines[idx:]...)
-	p.csv.lines = append(p.csv.lines[:idx], p.content)
-	p.csv.lines = append(p.csv.lines, rear...)
+	p.csv.lines = common.InsertSlice(p.csv.lines, idx, p.content)
 
 	writeLines(p.csv.lines, p.fpath)
-}
-
-func printLines(lines []string) {
-	for _, v := range lines {
-		fmt.Println(v)
-	}
-	fmt.Println("----------")
 }

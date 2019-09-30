@@ -119,3 +119,11 @@ func CopyFile(src string, dst string) (err error) {
 
 	return
 }
+
+func InsertSlice(slice []string, idx int, e string) []string {
+	rear := append([]string{}, slice[idx:]...)
+	slice = append(slice[:idx], e)
+	slice = append(slice, rear...)
+
+	return slice
+}
