@@ -35,6 +35,15 @@ type stCsv struct {
 	lines []string
 }
 
+func (p *stCsv) hasField(field string) (bool, int) {
+	for _, v := range p.head.fieldName {
+		if v == field {
+			return true, -1
+		}
+	}
+	return false, -1
+}
+
 func parseCsv(path string) (rtn *stCsv) {
 	rtn = nil
 

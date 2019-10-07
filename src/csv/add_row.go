@@ -68,7 +68,7 @@ func (p *stAddRow) add_row_key() {
 
 	copycsv := parseCsv(getCsvPath(region, p.upg.Item))
 	if copycsv == nil {
-		fmt.Println("add_row_key, copy csv[", p.upg.Item, "] not exist in region[", region, "]")
+		fmt.Println("add_row_key, copy csv[", p.upg.Item, "] not exist in region [", region, "]")
 		return
 	}
 	p.content, ok = copycsv.rows[key]
