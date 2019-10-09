@@ -33,7 +33,7 @@ func (p *stAddCsv) execute() {
 
 	// 文件已存在就不再拷贝了
 	if common.IsPathExist(p.fpath) {
-		fmt.Println("add csv", "file already exist:", p.upg.Item)
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("表格已存在"))
 		return
 	}
 
@@ -41,25 +41,32 @@ func (p *stAddCsv) execute() {
 	p.patterns = common.ParsePattern(p.upg.Data)
 	copyregion, ok := p.patterns["copy"]
 	if !ok {
-		fmt.Println("add csv [", p.upg.Item, "], pattern not [copy]")
+		p.upg.SaveExecuteResult(common.EE_Fail, "新增表必须配置从其他大区拷贝, 例 [copy]_Dev")
 		return
 	}
 
 	srcfile := getCsvPath(copyregion, p.upg.Item)
 	if !common.IsPathExist(srcfile) {
-		fmt.Println("add csv [", p.upg.Item, "] not exist in copy region [", copyregion, "]")
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区不存在该表"))
 		return
 	}
 
-	common.CopyFile(srcfile, p.fpath)
+	err := common.CopyFile(srcfile, p.fpath)
+	if err != nil {
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝表格失败"))
+		return
+	}
 
 	p.handleDataRule()
+
+	p.upg.SaveExecuteResult(common.EE_Success, "")
 }
 
 func (p *stAddCsv) handleDataRule() {
 	p.rules = common.ParseRule(p.upg.DataRule)
 	for _, rule := range p.rules {
-		if rule.R == "clear" {
+		switch rule.R {
+		case "clear":
 			p.clear()
 		}
 	}
@@ -69,7 +76,6 @@ func (p *stAddCsv) clear() {
 	fmt.Println("clear", p.upg.Item)
 
 	p.csv = parseCsv(p.fpath)
-	lines := p.csv.lines[:3]
-
-	writeLines(lines, p.fpath)
+	p.csv.clearData()
+	p.csv.savefile()
 }

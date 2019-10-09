@@ -4,6 +4,7 @@ import (
 	"common"
 	"csv"
 	"env"
+	"fmt"
 	"ini"
 )
 
@@ -11,12 +12,13 @@ func main() {
 	env.RegionRoot = "E:/svn/Papa2/branch/Resources/External"
 	env.CurrRegion = "SM"
 
-	rules := loadUpgrade("tmp.xlsx", "")
-	if rules == nil {
+	file := "upgrade.xlsx"
+	xlfile, upgs := loadUpgrade(file, "")
+	if upgs == nil {
 		return
 	}
 
-	for _, rule := range rules {
+	for _, rule := range upgs {
 		switch rule.Target {
 		case common.ET_csv:
 			csv.Execute(rule)
@@ -24,4 +26,8 @@ func main() {
 			ini.Execute(rule)
 		}
 	}
+
+	xlfile.Save(file)
+
+	fmt.Println("done.......")
 }

@@ -35,13 +35,13 @@ func add_row(upg *common.STOneUpgrade) {
 func (p *stAddRow) execute() {
 	p.fpath = getCsvPath(env.CurrRegion, p.upg.Item)
 	if !common.IsPathExist(p.fpath) {
-		fmt.Println("add_row", "file not eixst", p.upg.Item)
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("表格不存在"))
 		return
 	}
 
 	p.csv = parseCsv(p.fpath)
 	if p.csv == nil {
-		fmt.Println("add_row, parseCsv [", p.upg.Item, "] in [", env.CurrRegion, "] fail")
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("解析表格失败"))
 		return
 	}
 
@@ -62,18 +62,18 @@ func (p *stAddRow) add_row_key() {
 
 	region, ok := p.patterns["copy"]
 	if !ok {
-		fmt.Println("add_row_key, pattern not [copy]")
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("[key]模式必须配置从其他大区拷贝, 例 [copy]_Dev"))
 		return
 	}
 
 	copycsv := parseCsv(getCsvPath(region, p.upg.Item))
 	if copycsv == nil {
-		fmt.Println("add_row_key, copy csv[", p.upg.Item, "] not exist in region [", region, "]")
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区解析表格失败"))
 		return
 	}
 	p.content, ok = copycsv.rows[key]
 	if !ok {
-		fmt.Println("add_row_key, key [", key, "] not exist in copy region [", region, "]")
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区不存在该key"))
 		return
 	}
 }
@@ -81,7 +81,7 @@ func (p *stAddRow) add_row_key() {
 func (p *stAddRow) handleDataRule() {
 	p.rules = common.ParseRule(p.upg.DataRule)
 	for _, rule := range p.rules {
-		if rule.R == "ascending" || rule.R == "descending" {
+		if rule.R == "ascend" || rule.R == "descend" {
 			p.sortorder = rule.R
 		}
 	}
@@ -90,23 +90,25 @@ func (p *stAddRow) handleDataRule() {
 func (p *stAddRow) insert() {
 	key := getkey(p.content)
 	if _, ok := p.csv.rows[key]; ok {
-		fmt.Println("add_row, insert key [", key, "] already exist", p.upg.Item)
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("key已存在"))
 		return
 	}
 
-	idx := len(p.csv.lines)
+	idx := len(p.csv.data)
 	if p.sortorder != "" {
-		for i, v := range p.csv.lines[3:] {
+		for i, v := range p.csv.data {
 			k := getkey(v)
-			if (p.sortorder == "ascending" && k > key) ||
-				(p.sortorder == "descending" && k < key) {
-				idx = i + 3
+			if (p.sortorder == "ascend" && k > key) ||
+				(p.sortorder == "descend" && k < key) {
+				idx = i
 				break
 			}
 		}
 	}
 
-	p.csv.lines = common.InsertSlice(p.csv.lines, idx, p.content)
+	p.csv.data = common.InsertSlice(p.csv.data, idx, p.content)
 
-	writeLines(p.csv.lines, p.fpath)
+	p.csv.savefile()
+
+	p.upg.SaveExecuteResult(common.EE_Success, fmt.Sprintf(""))
 }

@@ -8,18 +8,20 @@ import (
 	"strings"
 )
 
-func readxlsx(path string, region string) *xlsx.Sheet {
+func readxlsx(path string, region string) (xlfile *xlsx.File, sheet *xlsx.Sheet) {
+	xlfile = nil
+	sheet = nil
+
 	xlfile, err := xlsx.OpenFile(path)
 	if err != nil {
 		fmt.Println("open upgrade error", err)
-		return nil
+		return
 	}
 
-	var sheet *xlsx.Sheet
 	if region == "" {
 		if len(xlfile.Sheets) == 0 {
 			fmt.Println("no sheet in upgrade.xlsx")
-			return nil
+			return
 		}
 		sheet = xlfile.Sheets[0]
 	} else {
@@ -27,11 +29,11 @@ func readxlsx(path string, region string) *xlsx.Sheet {
 		sheet, ok = xlfile.Sheet[region]
 		if !ok {
 			fmt.Println("not exist region ", region)
-			return nil
+			return
 		}
 	}
 
-	return sheet
+	return
 }
 
 func getCell(row *xlsx.Row, idx int, default_value string) string {
@@ -67,7 +69,11 @@ func parseRules(sheet *xlsx.Sheet) (upgs []*common.STOneUpgrade) {
 			Item:     item,
 			Data:     data,
 			DataRule: datarule,
+
+			Row: row,
 		}
+		onerule.ClearExecuteResult()
+
 		ntarget, err := strconv.Atoi(target[:1])
 		if err != nil {
 			continue
@@ -86,11 +92,14 @@ func parseRules(sheet *xlsx.Sheet) (upgs []*common.STOneUpgrade) {
 	return
 }
 
-func loadUpgrade(path string, region string) []*common.STOneUpgrade {
-	sheet := readxlsx(path, region)
-	if sheet == nil {
-		return nil
+func loadUpgrade(path string, region string) (xlfile *xlsx.File, upgs []*common.STOneUpgrade) {
+	xlfile = nil
+	upgs = nil
+
+	xlfile, sheet := readxlsx(path, region)
+	if xlfile == nil {
+		return
 	}
 
-	return parseRules(sheet)
+	return xlfile, parseRules(sheet)
 }

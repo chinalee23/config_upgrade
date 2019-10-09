@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/tealeg/xlsx"
 	"io"
 	"os"
 	"strings"
@@ -23,6 +24,15 @@ const (
 	EC_add_row
 	EC_add_column
 	EC_change_field
+	EC_del_col
+)
+
+type E_ExecuteResult string
+
+const (
+	_          E_ExecuteResult = ""
+	EE_Fail                    = "Fail"
+	EE_Success                 = "Success"
 )
 
 type STOneUpgrade struct {
@@ -31,6 +41,27 @@ type STOneUpgrade struct {
 	Item      string
 	Data      string
 	DataRule  string
+
+	Row *xlsx.Row
+}
+
+func (p *STOneUpgrade) ClearExecuteResult() {
+	sz := len(p.Row.Cells)
+	if sz < 8 {
+		p.Row.AddCell()
+	}
+	sz = len(p.Row.Cells)
+	if sz < 9 {
+		p.Row.AddCell()
+	}
+
+	p.Row.Cells[7].SetString("")
+	p.Row.Cells[8].SetString("")
+}
+
+func (p *STOneUpgrade) SaveExecuteResult(rst string, desc string) {
+	p.Row.Cells[7].SetString(rst)
+	p.Row.Cells[8].SetString(desc)
 }
 
 type STRule struct {
@@ -124,6 +155,10 @@ func InsertSlice(slice []string, idx int, e string) []string {
 	rear := append([]string{}, slice[idx:]...)
 	slice = append(slice[:idx], e)
 	slice = append(slice, rear...)
+	return slice
+}
 
+func RemoveSlice(slice []string, idx int) []string {
+	slice = append(slice[:idx], slice[idx+1:]...)
 	return slice
 }

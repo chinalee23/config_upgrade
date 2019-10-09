@@ -17,6 +17,10 @@ func Execute(upg *common.STOneUpgrade) {
 		add_csv(upg)
 	case common.EC_add_row:
 		add_row(upg)
+	case common.EC_add_column:
+		add_col(upg)
+	case common.EC_del_col:
+		del_col(upg)
 	}
 }
 
@@ -29,19 +33,49 @@ type stCsvHead struct {
 }
 
 type stCsv struct {
-	head  stCsvHead
-	rows  map[string]string
-	cols  [][]string
-	lines []string
+	path string
+
+	head stCsvHead
+	data []string
+
+	rows map[string]string
+	cols [][]string
+}
+
+func splitline(line string) []string {
+	return strings.Split(line, ",")
+}
+
+func joinline(sps []string) string {
+	return strings.Join(sps, ",")
 }
 
 func (p *stCsv) hasField(field string) (bool, int) {
-	for _, v := range p.head.fieldName {
+	for i, v := range p.head.fieldName {
 		if v == field {
-			return true, -1
+			return true, i
 		}
 	}
 	return false, -1
+}
+
+func (p *stCsv) clearData() {
+	p.data = make([]string, 0)
+}
+
+func (p *stCsv) savefile() {
+	file, _ := os.OpenFile(p.path, os.O_WRONLY|os.O_TRUNC, 0600)
+	defer file.Close()
+
+	content := make([]string, len(p.data)+3)
+	content[0] = strings.Join(p.head.desc, ",")
+	content[1] = strings.Join(p.head.fieldName, ",")
+	content[2] = strings.Join(p.head.fieldType, ",")
+	for i, v := range p.data {
+		content[i+3] = v
+	}
+
+	file.WriteString(strings.Join(content, "\n"))
 }
 
 func parseCsv(path string) (rtn *stCsv) {
@@ -53,16 +87,17 @@ func parseCsv(path string) (rtn *stCsv) {
 	}
 
 	rtn = &stCsv{
+		path: path,
+
 		head: parseHead(lines),
+		data: lines[3:],
 
 		rows: make(map[string]string),
 		cols: make([][]string, 0),
-
-		lines: lines,
 	}
 
 	for _, v := range lines[3:] {
-		sps := strings.Split(v, ",")
+		sps := splitline(v)
 
 		rtn.rows[sps[0]] = v
 		for ii, vv := range sps {
@@ -111,10 +146,6 @@ func readCsv(path string) (lines []string) {
 	return
 }
 
-func splitline(line string) []string {
-	return strings.Split(line, ",")
-}
-
 func parseHead(lines []string) (head stCsvHead) {
 	head = stCsvHead{
 		desc:      splitline(lines[0]),
@@ -133,17 +164,9 @@ func parseHead(lines []string) (head stCsvHead) {
 }
 
 func getkey(line string) string {
-	return strings.Split(line, ",")[0]
+	return splitline(line)[0]
 }
 
 func getCsvPath(region string, name string) string {
 	return filepath.Join(env.RegionRoot, filepath.Join(region, "CSV/"+name+".csv"))
-}
-
-func writeLines(lines []string, fpath string) {
-	file, _ := os.OpenFile(fpath, os.O_WRONLY|os.O_TRUNC, 0600)
-	defer file.Close()
-
-	filecontent := strings.Join(lines, "\n")
-	file.WriteString(filecontent)
 }
