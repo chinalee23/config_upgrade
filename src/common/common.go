@@ -20,11 +20,17 @@ type E_Change int
 
 const (
 	_ E_Change = iota
+
 	EC_add_csv
+
 	EC_add_row
-	EC_add_column
-	EC_change_field
+	EC_del_row
+
+	EC_add_col
 	EC_del_col
+
+	EC_mod_value
+	EC_mod_field
 )
 
 type E_ExecuteResult string
@@ -45,22 +51,17 @@ type STOneUpgrade struct {
 	Row *xlsx.Row
 }
 
-func (p *STOneUpgrade) ClearExecuteResult() {
+func (p *STOneUpgrade) SaveExecuteResult(rst string, desc string) {
 	sz := len(p.Row.Cells)
 	if sz < 8 {
 		p.Row.AddCell()
 	}
+	p.Row.Cells[7].SetString(rst)
+
 	sz = len(p.Row.Cells)
 	if sz < 9 {
 		p.Row.AddCell()
 	}
-
-	p.Row.Cells[7].SetString("")
-	p.Row.Cells[8].SetString("")
-}
-
-func (p *STOneUpgrade) SaveExecuteResult(rst string, desc string) {
-	p.Row.Cells[7].SetString(rst)
 	p.Row.Cells[8].SetString(desc)
 }
 

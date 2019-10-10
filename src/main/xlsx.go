@@ -6,6 +6,7 @@ import (
 	"github.com/tealeg/xlsx"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func readxlsx(path string, region string) (xlfile *xlsx.File, sheet *xlsx.Sheet) {
@@ -40,7 +41,8 @@ func getCell(row *xlsx.Row, idx int, default_value string) string {
 	if idx >= len(row.Cells) {
 		return default_value
 	} else {
-		cell := row.Cells[idx].String()
+		// cell := row.Cells[idx].String()
+		cell := row.Cells[idx].Value
 		cell = strings.TrimSpace(cell)
 		if cell == "" {
 			return default_value
@@ -72,7 +74,6 @@ func parseRules(sheet *xlsx.Sheet) (upgs []*common.STOneUpgrade) {
 
 			Row: row,
 		}
-		onerule.ClearExecuteResult()
 
 		ntarget, err := strconv.Atoi(target[:1])
 		if err != nil {
@@ -102,4 +103,24 @@ func loadUpgrade(path string, region string) (xlfile *xlsx.File, upgs []*common.
 	}
 
 	return xlfile, parseRules(sheet)
+}
+
+// 有合并表格的同时，又有数据验证，保存或的xlsx会有问题，原因不明
+// 生成结果时把合并去掉
+func saveResultXlsx(xlfile *xlsx.File) {
+	sheet := xlfile.Sheets[0]
+	for _, row := range sheet.Rows {
+		for _, cell := range row.Cells {
+			cell.HMerge = 0
+			cell.VMerge = 0
+		}
+	}
+
+	now := time.Now()
+	fname := fmt.Sprintf("result %d%02d%02d %02d-%02d-%02d.xlsx", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+
+	err := xlfile.Save(fname)
+	if err != nil {
+		fmt.Println("save result error", err)
+	}
 }

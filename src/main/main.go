@@ -10,7 +10,7 @@ import (
 
 func main() {
 	env.RegionRoot = "E:/svn/Papa2/branch/Resources/External"
-	env.CurrRegion = "SM"
+	env.CurrRegion = "HMT"
 
 	file := "upgrade.xlsx"
 	xlfile, upgs := loadUpgrade(file, "")
@@ -27,7 +27,7 @@ func main() {
 		}
 	}
 
-	xlfile.Save(file)
+	saveResultXlsx(xlfile)
 
 	fmt.Println("done.......")
 }

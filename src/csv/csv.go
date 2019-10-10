@@ -17,7 +17,7 @@ func Execute(upg *common.STOneUpgrade) {
 		add_csv(upg)
 	case common.EC_add_row:
 		add_row(upg)
-	case common.EC_add_column:
+	case common.EC_add_col:
 		add_col(upg)
 	case common.EC_del_col:
 		del_col(upg)
