@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/tealeg/xlsx"
 	"io"
@@ -162,4 +163,30 @@ func InsertSlice(slice []string, idx int, e string) []string {
 func RemoveSlice(slice []string, idx int) []string {
 	slice = append(slice[:idx], slice[idx+1:]...)
 	return slice
+}
+
+func ReadFile(path string) []string {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println("ReadFile, open error", err, path)
+		return nil
+	}
+	defer file.Close()
+
+	bufreader := bufio.NewReader(file)
+	lines := make([]string, 0)
+	for {
+		data, _, err := bufreader.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				fmt.Println("ReadFile read error", err, path)
+				return nil
+			}
+		}
+
+		lines = append(lines, string(data))
+	}
+	return lines
 }

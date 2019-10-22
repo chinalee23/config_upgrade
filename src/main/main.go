@@ -10,9 +10,9 @@ import (
 
 func main() {
 	env.RegionRoot = "E:/svn/Papa2/branch/Resources/External"
-	env.CurrRegion = "HMT"
+	env.CurrRegion = "SM"
 
-	file := "upgrade.xlsx"
+	file := "tmp.xlsx"
 	xlfile, upgs := loadUpgrade(file, "")
 	if upgs == nil {
 		return

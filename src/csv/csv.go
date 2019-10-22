@@ -1,11 +1,8 @@
 package csv
 
 import (
-	"bufio"
 	"common"
 	"env"
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -112,37 +109,10 @@ func parseCsv(path string) (rtn *stCsv) {
 }
 
 func readCsv(path string) (lines []string) {
-	lines = nil
-
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println("readCsv, open file error", path, err)
-		return
-	}
-	defer file.Close()
-
-	bufReader := bufio.NewReader(file)
-
-	lines = make([]string, 0)
-	for {
-		line, _, err := bufReader.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				fmt.Println("readCsv, readline error", path, err)
-				return
-			}
-		}
-
-		lines = append(lines, string(line))
-	}
-
-	if len(lines) < 3 {
-		fmt.Println("readCsv, csv line error", path, len(lines))
+	lines = common.ReadFile(path)
+	if lines == nil || len(lines) < 3 {
 		return nil
 	}
-
 	return
 }
 
