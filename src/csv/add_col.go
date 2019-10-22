@@ -12,7 +12,6 @@ type stAddCol struct {
 	csv   *stCsv
 
 	patterns map[string]string
-	rules    []*common.STRule
 
 	insertPos int
 
@@ -58,7 +57,9 @@ func (p *stAddCol) add_col_field() {
 		return
 	}
 
-	region, ok := p.patterns["copy"]
+	rules := common.ParseRule(p.upg.DataRule)
+
+	region, ok := rules["copy"]
 	if !ok {
 		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("新增列必须配置从其他大区拷贝, 例 [copy]_Dev"))
 		return
@@ -76,23 +77,13 @@ func (p *stAddCol) add_col_field() {
 		return
 	}
 
-	// p.insertPos = len(p.csv.head.desc)
 	p.insertPos = idx
 	p.csv.head.desc = common.InsertSlice(p.csv.head.desc, p.insertPos, copycsv.head.desc[idx])
 	p.csv.head.fieldName = common.InsertSlice(p.csv.head.fieldName, p.insertPos, copycsv.head.fieldName[idx])
 	p.csv.head.fieldType = common.InsertSlice(p.csv.head.fieldType, p.insertPos, copycsv.head.fieldType[idx])
 
-	p.handleDataRule()
-
-	p.upg.SaveExecuteResult(common.EE_Success, fmt.Sprintf(""))
-}
-
-func (p *stAddCol) handleDataRule() {
-	p.rules = common.ParseRule(p.upg.DataRule)
-	for _, rule := range p.rules {
-		if rule.R == "default" {
-			p.defaultValue = rule.Param
-		}
+	if defaultValue, ok := rules["default"]; ok {
+		p.defaultValue = defaultValue
 	}
 
 	for i, line := range p.csv.data {
@@ -100,6 +91,7 @@ func (p *stAddCol) handleDataRule() {
 		sps = common.InsertSlice(sps, p.insertPos, p.defaultValue)
 		p.csv.data[i] = joinline(sps)
 	}
-
 	p.csv.savefile()
+
+	p.upg.SaveExecuteResult(common.EE_Success, fmt.Sprintf(""))
 }

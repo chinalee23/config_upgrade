@@ -37,6 +37,8 @@ type stCsv struct {
 
 	rows map[string]string
 	cols [][]string
+
+	colnum int
 }
 
 func splitline(line string) []string {
@@ -104,6 +106,8 @@ func parseCsv(path string) (rtn *stCsv) {
 			rtn.cols[ii] = append(rtn.cols[ii], vv)
 		}
 	}
+
+	rtn.colnum = len(rtn.head.desc)
 
 	return
 }

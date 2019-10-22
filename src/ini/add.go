@@ -41,12 +41,12 @@ func (p *stAdd) execute() {
 
 func (p *stAdd) handleDataRule() {
 	rules := common.ParseRule(p.upg.DataRule)
-	for _, rule := range rules {
-		switch rule.R {
+	for k, v := range rules {
+		switch k {
 		case "copy":
-			p.copy(rule.Param)
+			p.copy(v)
 		case "default":
-			p.value = rule.Param
+			p.value = v
 			p.insert()
 		}
 	}

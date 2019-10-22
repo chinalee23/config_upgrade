@@ -13,8 +13,6 @@ type stAddCsv struct {
 
 	copyregion string
 
-	rules []*common.STRule
-
 	csv *stCsv
 }
 
@@ -37,9 +35,14 @@ func (p *stAddCsv) execute() {
 		return
 	}
 
+	p.handleDataRule()
+}
+
+func (p *stAddCsv) handleDataRule() {
+	rules := common.ParseRule(p.upg.DataRule)
+
 	// 只支持从其他大区直接拷贝
-	p.patterns = common.ParsePattern(p.upg.Data)
-	copyregion, ok := p.patterns["copy"]
+	copyregion, ok := rules["copy"]
 	if !ok {
 		p.upg.SaveExecuteResult(common.EE_Fail, "新增表必须配置从其他大区拷贝, 例 [copy]_Dev")
 		return
@@ -57,19 +60,11 @@ func (p *stAddCsv) execute() {
 		return
 	}
 
-	p.handleDataRule()
+	if _, ok = rules["clear"]; ok {
+		p.clear()
+	}
 
 	p.upg.SaveExecuteResult(common.EE_Success, "")
-}
-
-func (p *stAddCsv) handleDataRule() {
-	p.rules = common.ParseRule(p.upg.DataRule)
-	for _, rule := range p.rules {
-		switch rule.R {
-		case "clear":
-			p.clear()
-		}
-	}
 }
 
 func (p *stAddCsv) clear() {

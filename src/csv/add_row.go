@@ -4,6 +4,7 @@ import (
 	"common"
 	"env"
 	"fmt"
+	"strings"
 )
 
 type stAddRow struct {
@@ -11,11 +12,13 @@ type stAddRow struct {
 	csv   *stCsv
 	upg   *common.STOneUpgrade
 
+	key     string
 	content string
 
 	sortorder string
 	patterns  map[string]string
-	rules     []*common.STRule
+
+	flag bool
 }
 
 func add_row(upg *common.STOneUpgrade) {
@@ -27,6 +30,8 @@ func add_row(upg *common.STOneUpgrade) {
 		content: "",
 
 		sortorder: "",
+
+		flag: true,
 	}
 
 	p.execute()
@@ -54,37 +59,41 @@ func (p *stAddRow) execute() {
 
 	p.handleDataRule()
 
-	p.insert()
+	if p.flag {
+		p.insert()
+	}
 }
 
 func (p *stAddRow) add_row_key() {
-	key := p.patterns["key"]
-
-	region, ok := p.patterns["copy"]
-	if !ok {
-		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("[key]模式必须配置从其他大区拷贝, 例 [copy]_Dev"))
-		return
-	}
-
-	copycsv := parseCsv(getCsvPath(region, p.upg.Item))
-	if copycsv == nil {
-		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区解析表格失败"))
-		return
-	}
-	p.content, ok = copycsv.rows[key]
-	if !ok {
-		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区不存在该key"))
-		return
-	}
+	p.key = p.patterns["key"]
+	slice := make([]string, p.csv.colnum)
+	slice[0] = p.key
+	p.content = strings.Join(slice, ",")
 }
 
 func (p *stAddRow) handleDataRule() {
-	p.rules = common.ParseRule(p.upg.DataRule)
-	for _, rule := range p.rules {
-		if rule.R == "ascend" || rule.R == "descend" {
-			p.sortorder = rule.R
+	rules := common.ParseRule(p.upg.DataRule)
+
+	if region, ok := rules["copy"]; ok {
+		copycsv := parseCsv(getCsvPath(region, p.upg.Item))
+		if copycsv == nil {
+			p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区解析表格失败"))
+			p.flag = false
+			return
+		}
+		p.content, ok = copycsv.rows[p.key]
+		if !ok {
+			p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("拷贝大区不存在该key"))
+			p.flag = false
+			return
 		}
 	}
+
+	if order, ok := rules["sort"]; ok {
+		p.sortorder = order
+	}
+
+	p.insert()
 }
 
 func (p *stAddRow) insert() {

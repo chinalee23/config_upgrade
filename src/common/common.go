@@ -99,8 +99,8 @@ func ParsePattern(s string) (patterns map[string]string) {
 	return
 }
 
-func ParseRule(s string) (rules []*STRule) {
-	rules = make([]*STRule, 0)
+func ParseRule(s string) (rules map[string]string) {
+	rules = make(map[string]string)
 
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -119,10 +119,9 @@ func ParseRule(s string) (rules []*STRule) {
 			continue
 		}
 
-		rules = append(rules, &STRule{
-			R:     strings.TrimSpace(v[1:idx]),
-			Param: strings.TrimSpace(v[idx+1:]),
-		})
+		key := strings.TrimSpace(v[1:idx])
+		value := strings.TrimSpace(v[idx+1:])
+		rules[key] = value
 	}
 
 	return
