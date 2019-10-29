@@ -92,8 +92,6 @@ func (p *stAddRow) handleDataRule() {
 	if order, ok := rules["sort"]; ok {
 		p.sortorder = order
 	}
-
-	p.insert()
 }
 
 func (p *stAddRow) insert() {

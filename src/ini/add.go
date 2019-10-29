@@ -10,12 +10,15 @@ type stAdd struct {
 	value     string
 	key       string
 	insertIdx int
+
+	flag bool
 }
 
 func add(upg *common.STOneUpgrade) {
 	p := &stAdd{
 		upg:   upg,
 		value: "",
+		flag:  true,
 	}
 
 	p.execute()
@@ -24,7 +27,7 @@ func add(upg *common.STOneUpgrade) {
 func (p *stAdd) execute() {
 	p.key = createNewKey(p.upg.Item, p.upg.Data)
 	if _, ok := _ini.keyvalue[p.key]; ok {
-		fmt.Println("already exist this key")
+		p.upg.SaveExecuteResult(common.EE_Fail, "key已存在")
 		return
 	}
 
@@ -37,6 +40,10 @@ func (p *stAdd) execute() {
 	p.insertIdx = idx
 
 	p.handleDataRule()
+
+	if p.flag {
+		p.insert()
+	}
 }
 
 func (p *stAdd) handleDataRule() {
@@ -47,7 +54,6 @@ func (p *stAdd) handleDataRule() {
 			p.copy(v)
 		case "default":
 			p.value = v
-			p.insert()
 		}
 	}
 }
@@ -55,17 +61,18 @@ func (p *stAdd) handleDataRule() {
 func (p *stAdd) copy(region string) {
 	copyini := loadIni(getFilePath(region))
 	if copyini == nil {
+		p.flag = false
 		return
 	}
 
 	value, ok := copyini.keyvalue[p.key]
 	if !ok {
-		fmt.Println("key", p.upg.Data, "not exist in region", region)
+		p.flag = false
+		p.upg.SaveExecuteResult(common.EE_Fail, "拷贝大区不存在该key")
 		return
 	}
 
 	p.value = value
-	p.insert()
 }
 
 func (p *stAdd) insert() {

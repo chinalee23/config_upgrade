@@ -41,12 +41,13 @@ func (p *stDelCol) execute() {
 	p.patterns = common.ParsePattern(p.upg.Data)
 	if _, ok := p.patterns["field"]; ok {
 		p.del_col_field()
+	} else {
+		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("必须配置field模式"))
 	}
 }
 
 func (p *stDelCol) del_col_field() {
 	field := p.patterns["field"]
-
 	flag, idx := p.csv.hasField(field)
 	if !flag {
 		p.upg.SaveExecuteResult(common.EE_Fail, fmt.Sprintf("删除的列不存在"))
